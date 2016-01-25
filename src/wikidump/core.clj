@@ -23,10 +23,13 @@
     (fn [{:keys [body]}]
       (reset! data (xml/parse body))))
 
-  (let [entry (-> @data :content (nth 0) :content)
-        title (->> entry
-                   (filter #(= :title (:tag %)))
-                   first :content first)]
-    {:title title})
+  (defn extract-key
+    [k e]
+    (->> e (filter #(= k (:tag %))) first :content first))
+
+  (let [entry (-> @data :content (nth 0) :content)]
+    {:title (extract-key :title entry)
+     :abstract (extract-key :abstract entry)
+     :url (extract-key :url entry)})
 
   )
