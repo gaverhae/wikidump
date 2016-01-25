@@ -32,3 +32,11 @@
           :url "http://example.com/other"}]
         (with-open [rdr (clojure.java.io/reader (.getBytes test-data))]
           (doall (wiki/parse-xml rdr))))
+
+(expect [{:title "Test too"
+          :abstract "Something else entirely"
+          :url "http://example.com/other"}]
+        (let [store (wiki/in-memory-map-store)]
+          (with-open [rdr (clojure.java.io/reader (.getBytes test-data))]
+            (wiki/add-xml-feed! store rdr))
+          (wiki/search store "too")))

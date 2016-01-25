@@ -18,6 +18,24 @@
              (into {} (for [k [:url :abstract :title]]
                         [k (extract-key k doc)])))))))
 
+(defprotocol Store
+  (add-xml-feed! [this stream]
+    "Adds a stream of XML entries to the store. Mutates the store in place.
+    Should return nil to make mutation explicit.")
+  (search [this word]
+    "Searches the store for all entries that contain a given word. Returns a
+    vector of matching documents."))
+
+(defn in-memory-map-store
+  "Creates a naive in-memory implementation of the Store interface. This should
+  be very fast, but will not be able to store much. This will be used as the
+  reference implementation for testing new stores."
+  []
+  (let [data (atom {})]
+    (reify Store
+      (add-xml-feed! [_ stream] nil)
+      (search [_ word] []))))
+
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
