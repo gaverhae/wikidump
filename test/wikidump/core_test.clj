@@ -1,5 +1,5 @@
 (ns wikidump.core-test
-  (:require [expectations :refer [expect]]
+  (:require [expectations :refer [expect in]]
             [wikidump.core :as wiki]))
 
 (def test-data
@@ -48,3 +48,13 @@
           (with-open [rdr (clojure.java.io/reader (.getBytes test-data))]
             (wiki/add-xml-feed! store rdr))
           (wiki/search store "too")))
+
+(def test-store (let [store (wiki/in-memory-map-store)]
+                  (with-open [rdr (clojure.java.io/reader (.getBytes test-data))]
+                    (wiki/add-xml-feed! store rdr))
+                  store))
+
+(expect {:status 200}
+        (in ((wiki/make-handler test-store)
+             {:uri "/search?q=Test"
+              :request-method :get})))

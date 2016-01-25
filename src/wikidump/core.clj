@@ -65,11 +65,15 @@
         nil)
       (search [_ word] (@data word)))))
 
+(defn make-handler
+  "Turns a store into a Ring handler that returns JSON results."
+  [store]
+  (fn [req] {:status 500}))
+
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
   (println "Hello, World!"))
-
 
 (comment
 
