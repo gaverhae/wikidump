@@ -3,6 +3,15 @@
             [clojure.data.xml :as xml])
   (:gen-class))
 
+(defn parse-xml
+  "Converts an XML string or stream to a seq of maps with :url, :title and
+  :abstract.
+
+  This function does not check the validity of the input schema and does not
+  filter out invalid results."
+  [s]
+  )
+
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]

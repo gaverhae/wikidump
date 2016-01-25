@@ -1,7 +1,33 @@
 (ns wikidump.core-test
-  (:require [clojure.test :refer :all]
-            [wikidump.core :refer :all]))
+  (:require [expectations :refer [expect]]
+            [wikidump.core :as wiki]))
 
-(deftest a-test
-  (testing "FIXME, I fail."
-    (is (= 0 1))))
+(def test-data
+  "
+  <feed>
+    <doc>
+      <title>Test title</title>
+      <url>http://example.com/test</url>
+      <abstract>Test abstract</abstract>
+      <links>
+        <sublink linktype=\"ignored\">
+          <anchor>Garbage</anchor>
+          <link>http://example.com/link</link>
+        </sublink>
+      </links>
+    </doc>
+    <doc>
+      <abstract>Something else entirely</abstract>
+      <title>Test too</title>
+      <url>http://example.com/other</url>
+    </doc>
+  </feed>
+  ")
+
+(expect [{:title "Test title"
+          :abstract "Test abstract"
+          :url "http://example.com/test"}
+         {:title "Test too"
+          :abstract "Something else entirely"
+          :url "http://example.com/other"}]
+        (wiki/parse-xml test-data))
