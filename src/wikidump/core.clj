@@ -31,7 +31,17 @@
   at :doc and all of its words (lowercase, excluding punctuation) as a set at
   :words."
   [doc]
-  nil)
+  {:doc doc
+   :words (-> (select-keys doc [:abstract :title])
+              vals
+              (->> (clojure.string/join " ")
+                   (map #(if (Character/isLetterOrDigit %)
+                           % \space))
+                   (apply str))
+              .toLowerCase
+              (clojure.string/split #" ")
+              (->> (remove #{""})
+                   (into #{})))})
 
 (defn in-memory-map-store
   "Creates a naive in-memory implementation of the Store interface. This should
