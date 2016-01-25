@@ -10,8 +10,8 @@
   This function does not check the validity of the input schema and does not
   filter out invalid results."
   [s]
-  (letfn [(extract-key [k e]
-            (->> e :content (filter #(= k (:tag %))) first :content first))]
+  (letfn [(extract-key [k d]
+            (->> d :content (filter #(= k (:tag %))) first :content first))]
     (->> (xml/parse s)
       :content
       (map (fn [doc]
@@ -25,6 +25,13 @@
   (search [this word]
     "Searches the store for all entries that contain a given word. Returns a
     vector of matching documents."))
+
+(defn extract-words
+  "Extracts all words from a given document. Returns a map with the document
+  at :doc and all of its words (lowercase, excluding punctuation) as a set at
+  :words."
+  [doc]
+  nil)
 
 (defn in-memory-map-store
   "Creates a naive in-memory implementation of the Store interface. This should

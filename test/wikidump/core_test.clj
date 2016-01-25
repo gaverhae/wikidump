@@ -8,7 +8,7 @@
     <doc>
       <title>Test title</title>
       <url>http://example.com/test</url>
-      <abstract>Test abstract</abstract>
+      <abstract>Test abstract.</abstract>
       <links>
         <sublink linktype=\"ignored\">
           <anchor>Garbage</anchor>
@@ -17,7 +17,7 @@
       </links>
     </doc>
     <doc>
-      <abstract>Something else entirely</abstract>
+      <abstract>Something else entirely.</abstract>
       <title>Test too</title>
       <url>http://example.com/other</url>
     </doc>
@@ -25,16 +25,24 @@
   ")
 
 (expect [{:title "Test title"
-          :abstract "Test abstract"
+          :abstract "Test abstract."
           :url "http://example.com/test"}
          {:title "Test too"
-          :abstract "Something else entirely"
+          :abstract "Something else entirely."
           :url "http://example.com/other"}]
         (with-open [rdr (clojure.java.io/reader (.getBytes test-data))]
           (doall (wiki/parse-xml rdr))))
 
-(expect [{:title "Test too"
-          :abstract "Something else entirely"
+(expect {:doc {:title "Test title"
+               :abstract "Test abstract."
+               :url "http://example.com/test"}
+         :words #{"test" "title" "abstract"}}
+        (wiki/extract-words {:title "Test title"
+                             :abstract "Test abstract"
+                             :url "http://example.com/test"}))
+
+#_(expect [{:title "Test too"
+          :abstract "Something else entirely."
           :url "http://example.com/other"}]
         (let [store (wiki/in-memory-map-store)]
           (with-open [rdr (clojure.java.io/reader (.getBytes test-data))]
