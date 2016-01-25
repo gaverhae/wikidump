@@ -10,7 +10,13 @@
   This function does not check the validity of the input schema and does not
   filter out invalid results."
   [s]
-  )
+  (letfn [(extract-key [k e]
+            (->> e :content (filter #(= k (:tag %))) first :content first))]
+    (->> (xml/parse s)
+      :content
+      (map (fn [doc]
+             (into {} (for [k [:url :abstract :title]]
+                        [k (extract-key k doc)])))))))
 
 (defn -main
   "I don't do a whole lot ... yet."
@@ -31,10 +37,6 @@
     url {:as :stream}
     (fn [{:keys [body]}]
       (reset! data (xml/parse body))))
-
-  (defn extract-key
-    [k e]
-    (->> e (filter #(= k (:tag %))) first :content first))
 
   (let [entry (-> @data :content (nth 0) :content)]
     {:title (extract-key :title entry)

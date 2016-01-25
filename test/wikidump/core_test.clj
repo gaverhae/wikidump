@@ -30,4 +30,5 @@
          {:title "Test too"
           :abstract "Something else entirely"
           :url "http://example.com/other"}]
-        (wiki/parse-xml test-data))
+        (with-open [rdr (clojure.java.io/reader (.getBytes test-data))]
+          (doall (wiki/parse-xml rdr))))
