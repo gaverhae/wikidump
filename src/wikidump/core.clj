@@ -48,10 +48,22 @@
   be very fast, but will not be able to store much. This will be used as the
   reference implementation for testing new stores."
   []
-  (let [data (atom {})]
+  (let [data (atom {})
+        merge-new-entries
+        (fn [stream]
+          (let [new-entries (->> stream
+                                 parse-xml
+                                 (map extract-words)
+                                 (mapcat (fn [m]
+                                           (map (fn [w] {w #{(:doc m)}})
+                                                (:words m))))
+                                 (apply merge-with conj))]
+            (fn [old-store] (merge-with conj old-store new-entries))))]
     (reify Store
-      (add-xml-feed! [_ stream] nil)
-      (search [_ word] []))))
+      (add-xml-feed! [_ stream]
+        (swap! data (merge-new-entries stream))
+        nil)
+      (search [_ word] (@data word)))))
 
 (defn -main
   "I don't do a whole lot ... yet."

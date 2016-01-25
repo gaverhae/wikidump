@@ -38,12 +38,12 @@
                :url "http://example.com/test"}
          :words #{"test" "title" "abstract"}}
         (wiki/extract-words {:title "Test title"
-                             :abstract "Test abstract"
+                             :abstract "Test abstract."
                              :url "http://example.com/test"}))
 
-#_(expect [{:title "Test too"
-          :abstract "Something else entirely."
-          :url "http://example.com/other"}]
+(expect #{{:title "Test too"
+           :abstract "Something else entirely."
+           :url "http://example.com/other"}}
         (let [store (wiki/in-memory-map-store)]
           (with-open [rdr (clojure.java.io/reader (.getBytes test-data))]
             (wiki/add-xml-feed! store rdr))
