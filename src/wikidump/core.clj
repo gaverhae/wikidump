@@ -1,5 +1,6 @@
 (ns wikidump.core
-  (:require [org.httpkit.client :as client])
+  (:require [org.httpkit.client :as client]
+            [clojure.data.xml :as xml])
   (:gen-class))
 
 (defn -main
@@ -15,6 +16,17 @@
   (def url "http://dumps.wikimedia.org/enwiki/latest/enwiki-latest-abstract23.xml")
   (def file-path (str files-dir "/excerpt23.xml"))
 
-  (client/get url {} (fn [{:keys [body]}] (spit file-path body)))
+  (def data (atom nil))
+
+  (client/get
+    url {:as :stream}
+    (fn [{:keys [body]}]
+      (reset! data (xml/parse body))))
+
+  (let [entry (-> @data :content (nth 0) :content)
+        title (->> entry
+                   (filter #(= :title (:tag %)))
+                   first :content first)]
+    {:title title})
 
   )
