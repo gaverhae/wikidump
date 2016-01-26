@@ -69,7 +69,7 @@
       (add-xml-feed! [_ stream]
         (swap! data (merge-new-entries stream))
         nil)
-      (search [_ word] (@data word)))))
+      (search [_ word] (@data word [])))))
 
 (defn handle-search
   "Handles the search route; delegates to the store for actual search, but

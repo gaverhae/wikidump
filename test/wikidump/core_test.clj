@@ -91,3 +91,13 @@
                   :query-string "q=Test"
                   :request-method :get})
                 (update :body json/parse-string true))))
+
+(expect {:status 200
+         :headers {"Content-Type" "application/json; charset=utf-8"}
+         :body {:q "missing"
+                :results []}}
+        (in (-> ((wiki/make-handler test-store)
+                 {:uri "/search"
+                  :query-string "q=missing"
+                  :request-method :get})
+                (update :body json/parse-string true))))
