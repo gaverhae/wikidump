@@ -1,5 +1,6 @@
 (ns wikidump.core
-  (:require [org.httpkit.client :as client]
+  (:require (org.httpkit [client :as client]
+                         [server :as http])
             [clojure.data.xml :as xml]
             (ring.middleware [defaults :as rd]
                              [json :as rjson])
@@ -76,7 +77,8 @@
   manages errors and HTTP wrapping."
   [store word]
   (if (empty? word)
-    {:status 400}
+    {:status 400
+     :body {:error "Bad request."}}
     {:status 200
      :body {:q word
             :results (search store (.toLowerCase word))}}))
@@ -86,14 +88,16 @@
   [store]
   (-> (cj/routes
         (cj/GET "/search" [q] (handle-search store q))
-        (route/not-found {:status 404}))
+        (route/not-found {:status 404
+                          :body {:error "Page not found."}}))
       rjson/wrap-json-response
       (rd/wrap-defaults rd/api-defaults)))
 
 (defn -main
-  "I don't do a whole lot ... yet."
+  "Starts the program. At this point, there are no options."
   [& args]
-  (println "Hello, World!"))
+  (http/run-server (make-handler (in-memory-map-store))
+                   {:port 8080}))
 
 (comment
 
