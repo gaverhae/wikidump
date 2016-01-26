@@ -1,6 +1,7 @@
 (ns wikidump.core-test
   (:require [expectations :refer [expect in]]
-            [wikidump.core :as wiki]))
+            [wikidump.core :as wiki]
+            [cheshire.core :as json]))
 
 (def test-data
   "
@@ -77,14 +78,16 @@
               :request-method :get})))
 
 (expect {:status 200
+         :headers {"Content-Type" "application/json; charset=utf-8"}
          :body {:q "Test"
-                :results #{{:title "Test title"
-                            :abstract "Test abstract."
-                            :url "http://example.com/test"}
-                           {:title "Test too"
-                            :abstract "Something else entirely."
-                            :url "http://example.com/other"}}}}
-        (in ((wiki/make-handler test-store)
-             {:uri "/search"
-              :query-string "q=Test"
-              :request-method :get})))
+                :results [{:title "Test title"
+                           :abstract "Test abstract."
+                           :url "http://example.com/test"}
+                          {:title "Test too"
+                           :abstract "Something else entirely."
+                           :url "http://example.com/other"}]}}
+        (in (-> ((wiki/make-handler test-store)
+                 {:uri "/search"
+                  :query-string "q=Test"
+                  :request-method :get})
+                (update :body json/parse-string true))))

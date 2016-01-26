@@ -1,7 +1,8 @@
 (ns wikidump.core
   (:require [org.httpkit.client :as client]
             [clojure.data.xml :as xml]
-            [ring.middleware.defaults :as rd]
+            (ring.middleware [defaults :as rd]
+                             [json :as rjson])
             (compojure [core :as cj]
                        [route :as route]))
   (:gen-class))
@@ -86,6 +87,7 @@
   (-> (cj/routes
         (cj/GET "/search" [q] (handle-search store q))
         (route/not-found {:status 404}))
+      rjson/wrap-json-response
       (rd/wrap-defaults rd/api-defaults)))
 
 (defn -main

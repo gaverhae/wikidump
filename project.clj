@@ -7,7 +7,9 @@
                  [compojure "1.4.0"]
                  [http-kit "2.1.18"]
                  [org.clojure/data.xml "0.0.8"]
-                 [ring/ring-defaults "0.1.5"]]
+                 [ring/ring-defaults "0.1.5"]
+                 [ring/ring-json "0.4.0"]
+                 [cheshire "5.5.0"]]
   :main ^:skip-aot wikidump.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}
