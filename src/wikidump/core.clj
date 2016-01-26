@@ -96,26 +96,16 @@
 (defn -main
   "Starts the program. At this point, there are no options."
   [& args]
-  (http/run-server (make-handler (in-memory-map-store))
-                   {:port 8080}))
-
-(comment
-
-  (def files-dir "resources/public/files")
-  (.mkdirs (java.io.File. files-dir))
-  (def url "http://dumps.wikimedia.org/enwiki/latest/enwiki-latest-abstract23.xml")
-  (def file-path (str files-dir "/excerpt23.xml"))
-
-  (def data (atom nil))
-
-  (client/get
-    url {:as :stream}
-    (fn [{:keys [body]}]
-      (reset! data (xml/parse body))))
-
-  (let [entry (-> @data :content (nth 0) :content)]
-    {:title (extract-key :title entry)
-     :abstract (extract-key :abstract entry)
-     :url (extract-key :url entry)})
-
-  )
+  (println "Starting the server on port 8080.")
+  (let [store (in-memory-map-store)
+        url  "http://dumps.wikimedia.org/enwiki/latest/enwiki-latest-abstract23.xml"]
+    (println "Downloading data in the background. Please wait for the store to"
+             "fill. Download url:")
+    (println url)
+    (client/get url {:as :stream}
+      (fn [{:keys [body]}]
+        (println "Finished download. Starting to index...")
+        (add-xml-feed! store body)
+        (println "Indexing finished.")))
+    (http/run-server (make-handler store)
+                     {:port 8080})))
