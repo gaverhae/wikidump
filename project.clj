@@ -6,7 +6,8 @@
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [compojure "1.4.0"]
                  [http-kit "2.1.18"]
-                 [org.clojure/data.xml "0.0.8"]]
+                 [org.clojure/data.xml "0.0.8"]
+                 [ring/ring-defaults "0.1.5"]]
   :main ^:skip-aot wikidump.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}

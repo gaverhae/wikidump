@@ -1,6 +1,9 @@
 (ns wikidump.core
   (:require [org.httpkit.client :as client]
-            [clojure.data.xml :as xml])
+            [clojure.data.xml :as xml]
+            [ring.middleware.defaults :as rd]
+            (compojure [core :as cj]
+                       [route :as route]))
   (:gen-class))
 
 (defn parse-xml
@@ -68,7 +71,10 @@
 (defn make-handler
   "Turns a store into a Ring handler that returns JSON results."
   [store]
-  (fn [req] {:status 500}))
+  (-> (cj/routes
+        (cj/GET "/search?*" [q] {:status 200})
+        (route/not-found {:status 404}))
+      (rd/wrap-defaults rd/api-defaults)))
 
 (defn -main
   "I don't do a whole lot ... yet."

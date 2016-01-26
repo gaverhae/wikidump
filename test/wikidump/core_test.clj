@@ -58,3 +58,9 @@
         (in ((wiki/make-handler test-store)
              {:uri "/search?q=Test"
               :request-method :get})))
+
+(expect {:status 404}
+        (in ((wiki/make-handler test-store)
+             {:uri "/anything-else"
+              :request-method :get})))
+
