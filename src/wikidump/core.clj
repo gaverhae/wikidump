@@ -70,11 +70,21 @@
         nil)
       (search [_ word] (@data word)))))
 
+(defn handle-search
+  "Handles the search route; delegates to the store for actual search, but
+  manages errors and HTTP wrapping."
+  [store word]
+  (if (empty? word)
+    {:status 400}
+    {:status 200
+     :body {:q word
+            :results (search store (.toLowerCase word))}}))
+
 (defn make-handler
   "Turns a store into a Ring handler that returns JSON results."
   [store]
   (-> (cj/routes
-        (cj/GET "/search?*" [q] {:status 200})
+        (cj/GET "/search" [q] (handle-search store q))
         (route/not-found {:status 404}))
       (rd/wrap-defaults rd/api-defaults)))
 

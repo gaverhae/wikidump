@@ -67,7 +67,8 @@
 
 (expect {:status 200}
         (in ((wiki/make-handler test-store)
-             {:uri "/search?q=Test"
+             {:uri "/search"
+              :query-string "q=Test"
               :request-method :get})))
 
 (expect {:status 404}
@@ -75,3 +76,15 @@
              {:uri "/anything-else"
               :request-method :get})))
 
+(expect {:status 200
+         :body {:q "Test"
+                :results #{{:title "Test title"
+                            :abstract "Test abstract."
+                            :url "http://example.com/test"}
+                           {:title "Test too"
+                            :abstract "Something else entirely."
+                            :url "http://example.com/other"}}}}
+        (in ((wiki/make-handler test-store)
+             {:uri "/search"
+              :query-string "q=Test"
+              :request-method :get})))
