@@ -58,9 +58,11 @@
                                  parse-xml
                                  (map extract-words)
                                  (mapcat (fn [m]
-                                           (map (fn [w] {w #{(:doc m)}})
+                                           (map (fn [w] [w (:doc m)])
                                                 (:words m))))
-                                 (apply merge-with conj))]
+                                 (reduce (fn [m [k v]]
+                                           (update m k (fnil conj #{}) v))
+                                         {}))]
             (fn [old-store] (merge-with conj old-store new-entries))))]
     (reify Store
       (add-xml-feed! [_ stream]

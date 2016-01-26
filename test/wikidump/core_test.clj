@@ -49,6 +49,17 @@
             (wiki/add-xml-feed! store rdr))
           (wiki/search store "too")))
 
+(expect #{{:title "Test too"
+           :abstract "Something else entirely."
+           :url "http://example.com/other"}
+          {:title "Test title"
+               :abstract "Test abstract."
+               :url "http://example.com/test"}}
+        (let [store (wiki/in-memory-map-store)]
+          (with-open [rdr (clojure.java.io/reader (.getBytes test-data))]
+            (wiki/add-xml-feed! store rdr))
+          (wiki/search store "test")))
+
 (def test-store (let [store (wiki/in-memory-map-store)]
                   (with-open [rdr (clojure.java.io/reader (.getBytes test-data))]
                     (wiki/add-xml-feed! store rdr))
