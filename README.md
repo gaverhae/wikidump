@@ -11,7 +11,9 @@ improvements; in fact, this is the very reason this project is public.
 
 At this point, the server is launched with:
 
-    $ lein run
+```bash
+$ lein run
+```
 
 This starts up a web server on `localhost:8080` that will respond to requests.
 It also starts a background thread that downloads an excerpt from the Wikipedia
@@ -21,6 +23,28 @@ database.
 This is obviously a very temporary solution to get something working quickly;
 obvious missing pieces are loading data from an existing file instead of
 downloading it each time and more elaborate backends than an in-memory map.
+
+## Development
+
+I work in Vim and tmux. I usually have one visible pane with tests running, one
+pane with my Vim editor, and one hidden pane with the REPL the editor is
+connected to.
+
+The test pane is started with:
+
+```bash
+$ lein autoexpect
+```
+
+The REPL pane is started with:
+
+```bash
+$ lein repl
+```
+
+As long as the REPL is started in the correct folder, Vim (with fireplace)
+should detect the REPL and connect to it automatically at the first command
+that requires a REPL.
 
 ## Options
 
