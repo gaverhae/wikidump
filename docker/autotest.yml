@@ -1,0 +1,10 @@
+autoexpect:
+    image: clojure:lein-2.5.3
+    volumes:
+        - ..:/work
+        - /tmp/wikidump/mvn:/root/.m2
+    command: |
+        sh -c "
+        cd /work
+        lein autoexpect
+        "

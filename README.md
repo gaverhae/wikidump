@@ -30,10 +30,13 @@ I work in Vim and tmux. I usually have one visible pane with tests running, one
 pane with my Vim editor, and one hidden pane with the REPL the editor is
 connected to.
 
+My development workflow also uses Docker, in particular the `docker-compose`
+tool.
+
 The test pane is started with:
 
 ```bash
-$ lein autoexpect
+$ docker-compose -f docker/autotest up
 ```
 
 The REPL pane is started with:
