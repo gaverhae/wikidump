@@ -72,6 +72,27 @@
         nil)
       (search [_ word] (@data word [])))))
 
+(defn in-memory-set-store
+  "Creates a naive in-memory implementation of the Store interface. This
+  implementation does not have an index, so loading data is pretty fast, but
+  searching for a word takes linear time.
+
+  Internally uses a set rather than a vector to avoid duplicate documents if
+  somehow the same data gets loaded twice."
+  []
+  (let [data (atom #{})]
+    (reify Store
+      (add-xml-feed! [_ stream]
+        (->> stream parse-xml (swap! data (partial reduce conj)))
+        nil)
+      (search [_ word]
+        (->> @data
+             (filter (fn [doc]
+                       (or (.contains (.toLowerCase (:title doc))
+                                      (.toLowerCase word))
+                           (.contains (.toLowerCase (:abstract doc))
+                                      (.toLowerCase word))))))))))
+
 (defn handle-search
   "Handles the search route; delegates to the store for actual search, but
   manages errors and HTTP wrapping."

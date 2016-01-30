@@ -1,5 +1,5 @@
 (ns wikidump.core-test
-  (:require [expectations :refer [expect in]]
+  (:require [expectations :refer [expect in from-each]]
             [wikidump.core :as wiki]
             [cheshire.core :as json]))
 
@@ -61,21 +61,28 @@
             (wiki/add-xml-feed! store rdr))
           (wiki/search store "test")))
 
-(def test-store (let [store (wiki/in-memory-map-store)]
-                  (with-open [rdr (clojure.java.io/reader (.getBytes test-data))]
-                    (wiki/add-xml-feed! store rdr))
-                  store))
+(defn feed-test-data
+  [store]
+  (with-open [rdr (clojure.java.io/reader (.getBytes test-data))]
+    (wiki/add-xml-feed! store rdr))
+  store)
+
+(def test-stores
+  [(feed-test-data (wiki/in-memory-map-store))
+   (feed-test-data (wiki/in-memory-set-store))])
 
 (expect {:status 200}
-        (in ((wiki/make-handler test-store)
-             {:uri "/search"
-              :query-string "q=Test"
-              :request-method :get})))
+        (from-each [test-store test-stores]
+          (in ((wiki/make-handler test-store)
+               {:uri "/search"
+                :query-string "q=Test"
+                :request-method :get}))))
 
 (expect {:status 404}
-        (in ((wiki/make-handler test-store)
-             {:uri "/anything-else"
-              :request-method :get})))
+        (from-each [test-store test-stores]
+          (in ((wiki/make-handler test-store)
+               {:uri "/anything-else"
+                :request-method :get}))))
 
 (expect {:status 200
          :headers {"Content-Type" "application/json; charset=utf-8"}
@@ -86,18 +93,20 @@
                           {:title "Test too"
                            :abstract "Something else entirely."
                            :url "http://example.com/other"}]}}
-        (in (-> ((wiki/make-handler test-store)
-                 {:uri "/search"
-                  :query-string "q=Test"
-                  :request-method :get})
-                (update :body json/parse-string true))))
+        (from-each [test-store test-stores]
+          (in (-> ((wiki/make-handler test-store)
+                   {:uri "/search"
+                    :query-string "q=Test"
+                    :request-method :get})
+                  (update :body json/parse-string true)))))
 
 (expect {:status 200
          :headers {"Content-Type" "application/json; charset=utf-8"}
          :body {:q "missing"
                 :results []}}
-        (in (-> ((wiki/make-handler test-store)
-                 {:uri "/search"
-                  :query-string "q=missing"
-                  :request-method :get})
-                (update :body json/parse-string true))))
+        (from-each [test-store test-stores]
+          (in (-> ((wiki/make-handler test-store)
+                   {:uri "/search"
+                    :query-string "q=missing"
+                    :request-method :get})
+                  (update :body json/parse-string true)))))
