@@ -55,7 +55,11 @@
 (defn in-memory-map-store
   "Creates a naive in-memory implementation of the Store interface. This should
   be very fast, but will not be able to store much. This will be used as the
-  reference implementation for testing new stores."
+  reference implementation for testing new stores.
+
+  Note that this breaks down pretty badly if we ever need to search for
+  multiple words at once (at least if we want to support this at the Store
+  implementation level)."
   []
   (let [data (atom {})
         merge-new-entries
