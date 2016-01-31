@@ -1,0 +1,23 @@
+repl:
+    image: clojure:lein-2.5.3
+    volumes:
+        - ..:/work
+        - /tmp/wikidump/mvn:/root/.m2
+    environment:
+        POSTGRES_URL: "jdbc:postgresql://db/db_name?user=db_user&password=db_password"
+    links:
+        - db:db
+    ports:
+        - 10345:10345
+    command: |
+        sh -c "
+        cd /work
+        lein repl :headless :host 0.0.0.0 :port 10345
+        "
+
+db:
+    image: postgres:9.5.0
+    environment:
+        POSTGRES_PASSWORD: db_password
+        POSTGRES_USER: db_user
+        POSTGRES_DB: db_name
