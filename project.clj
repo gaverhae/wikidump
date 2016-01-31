@@ -9,7 +9,11 @@
                  [org.clojure/data.xml "0.0.8"]
                  [ring/ring-defaults "0.1.5"]
                  [ring/ring-json "0.4.0"]
-                 [cheshire "5.5.0"]]
+                 [cheshire "5.5.0"]
+                 [org.postgresql/postgresql "9.4-1206-jdbc41"]
+                 [org.clojure/java.jdbc "0.4.2"]
+                 [ragtime "0.5.2"]
+                 [environ "1.0.2"]]
   :main ^:skip-aot wikidump.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}

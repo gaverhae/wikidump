@@ -1,6 +1,7 @@
 (ns wikidump.core-test
   (:require [expectations :refer [expect in from-each]]
             [wikidump.core :as wiki]
+            [environ.core :refer [env]]
             [cheshire.core :as json]))
 
 (def test-data
@@ -69,7 +70,8 @@
 
 (def test-stores
   [(feed-test-data (wiki/in-memory-map-store))
-   (feed-test-data (wiki/in-memory-set-store))])
+   (feed-test-data (wiki/in-memory-set-store))
+   (feed-test-data (wiki/postgres-store (env :postgres-url)))])
 
 (expect {:status 200}
         (from-each [test-store test-stores]

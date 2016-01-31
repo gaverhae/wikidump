@@ -4,8 +4,12 @@
             [clojure.data.xml :as xml]
             (ring.middleware [defaults :as rd]
                              [json :as rjson])
+            (ragtime [jdbc :as ragsql]
+                     [core :as rg])
             (compojure [core :as cj]
-                       [route :as route]))
+                       [route :as route])
+            [environ.core :refer [env]]
+            [clojure.java.jdbc :as sql])
   (:gen-class))
 
 (defn parse-xml
@@ -113,6 +117,41 @@
                           :body {:error "Page not found."}}))
       rjson/wrap-json-response
       (rd/wrap-defaults rd/api-defaults)))
+
+(defn run-migrations
+  "Runs the migrations in resources/migrations on the given db-uri to bring it
+  up-to-date."
+  [db-uri]
+  (let [store (ragsql/sql-database db-uri)
+        migs (ragsql/load-resources "migrations")
+        index (rg/into-index migs)]
+    (rg/migrate-all store index migs)))
+
+(defn postgres-store
+  "Returns a Store backed by a PostgreSQL database at the given URI.
+
+  URI must be of the form
+  jdbc:postgresql://server-address/db-name?user=db-user&password=db-password"
+  [db-uri]
+  (run-migrations db-uri)
+  (reify Store
+    (add-xml-feed! [_ stream]
+      (let [data (parse-xml stream)]
+        (doseq [{:keys [url title abstract]} data]
+          (sql/execute! db-uri ["INSERT INTO docs(url, title, abstract)
+                                VALUES(?, ?, ?)
+                                ON CONFLICT (url)
+                                DO UPDATE SET abstract = ?,
+                                              title = ?"
+                                url title abstract abstract title])))
+      nil)
+    (search [_ word]
+      (let [lword (.toLowerCase word)]
+        (sql/query db-uri ["SELECT *
+                           FROM docs
+                           WHERE lower(abstract) LIKE '%' || ? || '%'
+                              OR lower(title)    LIKE '%' || ? || '%'"
+                           lword lword])))))
 
 (defn -main
   "Starts the program. At this point, there are no options."

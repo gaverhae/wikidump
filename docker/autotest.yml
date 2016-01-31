@@ -3,8 +3,19 @@ autoexpect:
     volumes:
         - ..:/work
         - /tmp/wikidump/mvn:/root/.m2
+    environment:
+        POSTGRES_URL: "jdbc:postgresql://test_db/test_db_name?user=test_db_user&password=test_db_password"
+    links:
+        - test_db:test_db
     command: |
         sh -c "
         cd /work
         lein autoexpect
         "
+
+test_db:
+    image: postgres:9.5.0
+    environment:
+        POSTGRES_PASSWORD: test_db_password
+        POSTGRES_USER: test_db_user
+        POSTGRES_DB: test_db_name
