@@ -151,11 +151,12 @@
       nil)
     (search [_ word]
       (let [lword (.toLowerCase word)]
-        (sql/query db-uri ["SELECT *
-                           FROM docs
-                           WHERE lower(abstract) LIKE '%' || ? || '%'
-                              OR lower(title)    LIKE '%' || ? || '%'"
-                           lword lword])))))
+        (or (sql/query db-uri ["SELECT *
+                               FROM docs
+                               WHERE lower(abstract) LIKE '%' || ? || '%'
+                               OR lower(title)    LIKE '%' || ? || '%'"
+                               lword lword])
+            [])))))
 
 (defn -main
   "Starts the program. At this point, there are no options."
