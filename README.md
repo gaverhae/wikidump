@@ -36,18 +36,24 @@ tool.
 The test pane is started with:
 
 ```bash
-$ docker-compose -f docker/autotest up
+$ docker-compose -f docker/autotest.yml up
 ```
 
-The REPL pane is started with:
+The REPL pane is started similarly with:
 
 ```bash
-$ lein repl
+$ docker-compose -f docker/repl.yml up
 ```
 
-As long as the REPL is started in the correct folder, Vim (with fireplace)
-should detect the REPL and connect to it automatically at the first command
-that requires a REPL.
+The editor then has to connect to the REPL. In my case (Vim on a Mac, so Docker
+runs inside a VM) this is done with the following command (inside Vim):
+
+```vim
+:Connect nrepl://192.168.99.100:10345
+```
+
+Of course, this is because my Docker VM has the IP `192.168.99.100`, which may
+or may not match yours.
 
 ## Options
 
