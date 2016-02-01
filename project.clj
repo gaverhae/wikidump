@@ -13,7 +13,8 @@
                  [org.postgresql/postgresql "9.4-1206-jdbc41"]
                  [org.clojure/java.jdbc "0.4.2"]
                  [ragtime "0.5.2"]
-                 [environ "1.0.2"]]
+                 [environ "1.0.2"]
+                 [org.clojure/test.check "0.9.0"]]
   :main ^:skip-aot wikidump.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}

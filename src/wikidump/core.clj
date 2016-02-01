@@ -13,19 +13,25 @@
   (:gen-class))
 
 (defn parse-xml
-  "Converts an XML string or stream to a seq of maps with :url, :title and
-  :abstract.
+  "Converts an XML stream to a seq of maps with :url, :title and :abstract.
 
   This function does not check the validity of the input schema and does not
   filter out invalid results."
   [s]
   (letfn [(extract-key [k d]
-            (->> d :content (filter #(= k (:tag %))) first :content first))]
+            (-> (:content d)
+                (->> (filter #(= k (:tag %))))
+                first :content first
+                (or "")))]
     (->> (xml/parse s)
       :content
       (map (fn [doc]
              (into {} (for [k [:url :abstract :title]]
-                        [k (extract-key k doc)])))))))
+                        [k (extract-key k doc)]))))
+      (remove (fn [{:keys [url title abstract]}]
+                (or (= "" url)
+                    (and (= "" title)
+                         (= "" abstract))))))))
 
 (defprotocol Store
   (add-xml-feed! [this stream]
@@ -36,21 +42,18 @@
     vector of matching documents."))
 
 (defn extract-words
-  "Extracts all words from a given document. Returns a map with the document
-  at :doc and all of its words (lowercase, excluding punctuation) as a set at
-  :words."
+  "Extracts all words from a given document, all lowercase in a set."
   [doc]
-  {:doc doc
-   :words (-> (select-keys doc [:abstract :title])
-              vals
-              (->> (clojure.string/join " ")
-                   (map #(if (Character/isLetterOrDigit %)
-                           % \space))
-                   (apply str))
-              .toLowerCase
-              (clojure.string/split #" ")
-              (->> (remove #{""})
-                   (into #{})))})
+  (-> (select-keys doc [:abstract :title])
+      vals
+      (->> (clojure.string/join " ")
+           (map #(if (Character/isLetterOrDigit %)
+                   % \space))
+           (apply str))
+      .toLowerCase
+      (clojure.string/split #" ")
+      (->> (remove #{""})
+           (into #{}))))
 
 (defn in-memory-map-store
   "Creates a naive in-memory implementation of the Store interface. This should
@@ -62,23 +65,39 @@
   implementation level)."
   []
   (let [data (atom {})
-        merge-new-entries
-        (fn [stream]
-          (let [new-entries (->> stream
-                                 parse-xml
-                                 (map extract-words)
-                                 (mapcat (fn [m]
-                                           (map (fn [w] [w (:doc m)])
-                                                (:words m))))
-                                 (reduce (fn [m [k v]]
-                                           (update m k (fnil conj #{}) v))
-                                         {}))]
-            (fn [old-store] (merge-with conj old-store new-entries))))]
+        remove-existing (fn [store new-entry]
+                          (into {} (for [[k v] store]
+                                     [k (->> v
+                                             (remove #(= (:url new-entry)
+                                                         (:url %)))
+                                             set)])))
+        add-entry (fn [store new-entry]
+                    (let [words (extract-words new-entry)]
+                      (merge-with clojure.set/union
+                                  store
+                                  (into {} (map #(-> [% #{new-entry}])
+                                                words)))))
+        merge-new-entries (fn [stream]
+                            (let [new-entries (->> stream parse-xml)]
+                              (fn [store]
+                                (reduce (fn [store new-entry]
+                                          (-> store
+                                              (remove-existing new-entry)
+                                              (add-entry new-entry)))
+                                        {} new-entries))))]
     (reify Store
       (add-xml-feed! [_ stream]
         (swap! data (merge-new-entries stream))
         nil)
-      (search [_ word] (@data word [])))))
+      (search [_ word]
+        (let [cur @data
+              lw (.toLowerCase word)]
+          (->> (keys cur)
+               (filter #(.contains % lw))
+               (map cur)
+               (reduce concat)
+               set
+               (sort-by :url)))))))
 
 (defn in-memory-set-store
   "Creates a naive in-memory implementation of the Store interface. This
@@ -91,7 +110,17 @@
   (let [data (atom #{})]
     (reify Store
       (add-xml-feed! [_ stream]
-        (->> stream parse-xml (swap! data (partial reduce conj)))
+        (let [new-entries (parse-xml stream)]
+          (swap! data
+                 (fn [store]
+                   (reduce (fn [store new-entry]
+                             (->> store
+                                  (remove #(= (:url new-entry)
+                                              (:url %)))
+                                  (concat [new-entry])
+                                  set))
+                           store
+                           new-entries))))
         nil)
       (search [_ word]
         (->> @data
@@ -99,7 +128,8 @@
                        (or (.contains (.toLowerCase (:title doc))
                                       (.toLowerCase word))
                            (.contains (.toLowerCase (:abstract doc))
-                                      (.toLowerCase word))))))))))
+                                      (.toLowerCase word)))))
+             (sort-by :url))))))
 
 (defn handle-search
   "Handles the search route; delegates to the store for actual search, but
@@ -150,14 +180,16 @@
                                 url title abstract abstract title])))
       nil)
     (search [_ word]
-      (let [lword (.toLowerCase word)]
-        (or (sql/query db-uri ["SELECT *
-                               FROM docs
-                               WHERE lower(abstract) LIKE '%' || ? || '%'
-                               OR lower(title)    LIKE '%' || ? || '%'"
-                               lword lword])
-            [])))))
+      (or (->> (sql/query db-uri ["SELECT *
+                                  FROM docs
+                                  WHERE lower(abstract) LIKE '%' || lower(?) || '%'
+                                  OR lower(title)    LIKE '%' || lower(?) || '%'"
+                                  word word])
+               (sort-by :url))
+          []))))
 
+;; TODO: Add env parsing to select where to load data from and
+;;       which store to create.
 (defn -main
   "Starts the program. At this point, there are no options."
   [& args]
